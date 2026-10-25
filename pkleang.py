@@ -26,7 +26,7 @@ def update_pkg_list(manager="pacman", cmd="-Qe"): #default distro is arch linux
         return pkg_list
         # if pacman returns nothing - false
     else:
-        return False
+        return {}
 
 def display_packages(pkg_list , quantity=5): # default word in line quantity is 5
     # extracts pkg name from pkg_list dict
@@ -48,21 +48,30 @@ def select_pkgs(pkg_list):
         f = 1 # flag that indicates the user has entered all the pkgs correctly
         print("Write pkgs, that you want to delete, separated by a space (e.g \"htop fastfetch\")")
         pkgs_removed = input().split()
-        # pkgs validity check
-        for pkg in pkgs_removed:
-            if pkg not in pkg_list:
-                print(f"\"{pkg}\" doen`t exit on your system")
-                print()
-                f = 0
-                break
-        #
+        # bland list check
+        if pkgs_removed:
+            # pkgs validity check
+            for pkg in pkgs_removed:
+                if pkg not in pkg_list:
+                    print(f"\"{pkg}\" doen`t exit on your system")
+                    print()
+                    f = 0
+                    break
+        else:
+            f = 0
         if f == 1:
             return pkgs_removed
 
-def check_delition():
-    print("Are you sure to delete this packages [Y/n]")
+def check_choice():
+    print("Are you sure to delete this packages, or want to return to pkg choice? [Y/n/r]")
     answer = input().lower()
-    return not answer or answer == "yes"
+    if not answer or answer == 'y':
+        return 1
+    # variant to users, who want to return to pkg choice
+    elif answer == 'r':
+        return 2
+    else:
+        return 0
 
 
 
@@ -71,10 +80,13 @@ def main():
     pkg_list = update_pkg_list(pkg_manager, upd_cmd)
     # pacman proper output check
     if pkg_list:
-        display_packages(pkg_list)
-        pkgs_removed = select_pkgs(pkg_list)
-        if check_delition():
-            delete_packages(pkg_manager, del_cmd, pkgs_removed)
+        while True:
+            display_packages(pkg_list)
+            pkgs_removed = select_pkgs(pkg_list)
+            # if user select No or Yes
+            if check_choice() < 2:
+                delete_packages(pkg_manager, del_cmd, pkgs_removed)
+                break
     else:
         print("Oops, something went wrong)")
 
