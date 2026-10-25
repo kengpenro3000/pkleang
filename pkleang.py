@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# run this script with root privilege
+
 
 import os
 import subprocess
@@ -30,6 +32,7 @@ def display_packages(pkg_list , quantity=5): # default word in line quantity is 
     # extracts pkg name from pkg_list dict
     pkg_name_list = list(pkg_list.keys())
     for n in range(len(pkg_name_list)):
+        # every {quantity} pkg name is printed at new line
         if n % quantity == 0 and n != 0:
             print()
         print(pkg_name_list[n], end=' ')
@@ -56,6 +59,12 @@ def select_pkgs(pkg_list):
         if f == 1:
             return pkgs_removed
 
+def check_delition():
+    print("Are you sure to delete this packages [Y/n]")
+    answer = input().lower()
+    return not answer or answer == "yes"
+
+
 
 def main():
     pkg_manager, upd_cmd, del_cmd = PACKAGE_MANAGERS[DISTRO_NAME]
@@ -64,13 +73,10 @@ def main():
     if pkg_list:
         display_packages(pkg_list)
         pkgs_removed = select_pkgs(pkg_list)
-        print("Are you sure to delete this packages [Y/n]")
-        answer = input().lower()
-        if not answer or answer == "yes":
-            delete_packages(pkg_manager, del_cmd)
-
+        if check_delition():
+            delete_packages(pkg_manager, del_cmd, pkgs_removed)
     else:
-        print("Oops, somthing went wrong)")
+        print("Oops, something went wrong)")
 
 
 if __name__ == "__main__":
