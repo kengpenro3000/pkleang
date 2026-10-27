@@ -35,38 +35,39 @@ def display_packages(pkg_list , quantity=5): # default word in line quantity is 
         # every {quantity} pkg name is printed at new line
         if n % quantity == 0 and n != 0:
             print()
-        print(pkg_name_list[n], end=' ')
+        print(f"({n+1}){pkg_name_list[n]}", end=' ')
     print()
     print()
 
 
-def delete_packages(manager, cmd):
-    subprocess.run([manager, cmd, *complited_pkgs], check=True)
+def delete_packages(manager, cmd, pkgs):
+    subprocess.run([manager, cmd, *pkgs], check=True)
 
 def select_pkgs(pkg_list):
-    pkgs_removed = []
+    pkgs_removed = set()
+    pkg_names_list = list(pkg_list.keys())
 
     while True:
         f = 1 # flag that indicates the user has entered all the pkgs correctly
-        print("Write pkgs names or their numbers, separated by a space; you can conbine names and numbers (e.g \"htop 1 2 fastfetch\")")
+        print("Write pkgs names or their numbers, separated by a space; you can combine names and numbers (e.g \"htop 1 2 fastfetch\")")
         # pkgs introduced by user
         intorduced_pkgs = input().split()
         # bland list check
         if intorduced_pkgs:
             # pkgs validity check
             for pkg in intorduced_pkgs:
-                determened_pkg = determinate_pkg(pkg, pkg_list)
+                determened_pkg = determinate_pkg(pkg, pkg_names_list)
                 if determened_pkg:
-                    pkgs_removed.append(determened_pkg)
+                    pkgs_removed.add(determened_pkg)
                 else:
-                    print(f"\"{pkg}\" doen`t exit on your system")
+                    print(f"\"{pkg}\" doesn`t exist on your system")
                     print()
                     f = 0
                     break
         else:
             f = 0
         if f == 1:
-            return pkgs_removed
+            return sorted(pkgs_removed)
 
 def determinate_pkg(pkg, pkg_list):
     if pkg.isnumeric():
@@ -84,7 +85,9 @@ def determinate_pkg(pkg, pkg_list):
 
 
 
-def check_choice():
+def check_choice(pkgs):
+    print()
+    print(*pkgs)
     print("Are you sure to delete this packages, or want to return to pkg choice? [Y/n/r]")
     answer = input().lower()
     if not answer or answer == 'y':
@@ -106,7 +109,7 @@ def main():
             display_packages(pkg_list)
             pkgs_removed = select_pkgs(pkg_list)
             # if user select No or Yes
-            if check_choice() < 2:
+            if check_choice(pkgs_removed) < 2:
                 delete_packages(pkg_manager, del_cmd, pkgs_removed)
                 break
     else:
