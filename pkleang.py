@@ -40,19 +40,25 @@ def display_packages(pkg_list , quantity=5): # default word in line quantity is 
     print()
 
 
-def delete_packages(manager, cmd, pkgs):
-    subprocess.run([manager, cmd, *pkgs], check=True)
+def delete_packages(manager, cmd):
+    subprocess.run([manager, cmd, *complited_pkgs], check=True)
 
 def select_pkgs(pkg_list):
+    pkgs_removed = []
+
     while True:
         f = 1 # flag that indicates the user has entered all the pkgs correctly
-        print("Write pkgs, that you want to delete, separated by a space (e.g \"htop fastfetch\")")
-        pkgs_removed = input().split()
+        print("Write pkgs names or their numbers, separated by a space; you can conbine names and numbers (e.g \"htop 1 2 fastfetch\")")
+        # pkgs introduced by user
+        intorduced_pkgs = input().split()
         # bland list check
-        if pkgs_removed:
+        if intorduced_pkgs:
             # pkgs validity check
-            for pkg in pkgs_removed:
-                if pkg not in pkg_list:
+            for pkg in intorduced_pkgs:
+                determened_pkg = determinate_pkg(pkg, pkg_list)
+                if determened_pkg:
+                    pkgs_removed.append(determened_pkg)
+                else:
                     print(f"\"{pkg}\" doen`t exit on your system")
                     print()
                     f = 0
@@ -61,6 +67,22 @@ def select_pkgs(pkg_list):
             f = 0
         if f == 1:
             return pkgs_removed
+
+def determinate_pkg(pkg, pkg_list):
+    if pkg.isnumeric():
+        # pkg_index-1 because numeration for user starts from 1
+        pkg_index = int(pkg)-1
+        if 0 < pkg_index+1 < len(pkg_list):
+            return pkg_list[pkg_index]
+        else:
+            return ''
+    else:
+        if pkg in pkg_list:
+            return pkg
+        else:
+            return ''
+
+
 
 def check_choice():
     print("Are you sure to delete this packages, or want to return to pkg choice? [Y/n/r]")
