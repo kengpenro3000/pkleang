@@ -13,7 +13,8 @@ HOME = os.environ["HOME"]
 DISTRO_NAME = platform.freedesktop_os_release()["ID"]
 PACKAGE_MANAGERS = {
     # "pkg_manager_name": ["upd_command", "del_commnand"]
-    "pacman": ["-Qe", "-R"],
+    "pacman": ["-Qen", "-R"],
+    "yay" : ["-Qem", "-R"]
 
 
 }
@@ -39,7 +40,7 @@ def update_pkg_list(managers={"pacman": ["-Qe", "-R"]}): #default distro is arch
         rm_cmd = cmds[1]
         # generates temporary list: ["name1 something1", "name2 something2"]
         pkg_list = list(subprocess.run([manager, upd_cmd], capture_output=True, text=True).stdout.strip().split("\n"))
-        print(pkg_list)
+        # print(pkg_list)
         if pkg_list:
             for pkg in pkg_list:
                 # split "name1 something1" into ("name1", "something1")
@@ -65,8 +66,10 @@ def display_packages(pkg_list , quantity=5): # default word-in-line quantity is 
 
 
 def delete_packages(manager, cmd, pkgs):
-    subprocess.run([manager, cmd, *pkgs], check=True)
-
+    try:
+        subprocess.run([manager, cmd, *pkgs], check=True)
+    except subprocess.SubprocessError:
+        pass
 
 
 def select_pkgs(pkg_list):
@@ -146,12 +149,20 @@ def main():
             display_packages(pkg_list)
             pkgs_removed = select_pkgs(pkg_list)
             # if user select No or Yes
-            if check_choice(*list(pkgs_removed.values())) < 2:
+            # ch_pkgs - pkgs to check; appends pkgs from pkgs_removed.values() to one list
+            ch_pkgs = []
+            for pkgs_list in list(pkgs_removed.values()):
+                ch_pkgs += pkgs_list
+            # print(ch_pkgs)
+            # return
+
+            if check_choice(ch_pkgs) < 2:
                 for manager in pkgs_removed:
                     cmd_rm = PACKAGE_MANAGERS[manager][1]
                     pkgs = pkgs_removed[manager]
                     # print(manager, cmd_rm, *pkgs)
-                    delete_packages(manager, cmd_rm, *pkgs)
+                    # return
+                    delete_packages(manager, cmd_rm, pkgs)
                 break
     else:
         print("Oops, something went wrong)")
