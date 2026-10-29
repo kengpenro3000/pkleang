@@ -64,13 +64,13 @@ def display_packages(pkg_list , quantity=5): # default word-in-line quantity is 
 
 
 
-def delete_package(manager):
-    manager
+def delete_packages(manager, cmd, pkgs):
     subprocess.run([manager, cmd, *pkgs], check=True)
 
 
 
 def select_pkgs(pkg_list):
+    res = {}
     pkgs_removed = set()
     pkg_names_list = list(pkg_list.keys())
     while True:
@@ -93,7 +93,13 @@ def select_pkgs(pkg_list):
         else:
             f = 0
         if f == 1:
-            return sorted(pkgs_removed)
+            for pkg in pkgs_removed:
+                manager = pkg_list[pkg][0]
+                if res.get(manager):
+                    res[manager].append(pkg)
+                else:
+                    res.setdefault(manager, [pkg])
+            return res
 
 
 
@@ -107,7 +113,7 @@ def determinate_pkg(pkg, pkg_list):
         else:
             return ''
     else:
-        # check if pkg_name exitst in pkg_list
+        # check if pkg_name exist in pkg_list
         if pkg in pkg_list:
             return pkg
         else:
@@ -140,17 +146,19 @@ def main():
             display_packages(pkg_list)
             pkgs_removed = select_pkgs(pkg_list)
             # if user select No or Yes
-            if check_choice(pkgs_removed) < 2:
-                for pkg_name in pkgs_removed:
-                    pkg = {pkg_name: pkg_list[pkg_name]}
-                    delete_packages(pkg)
+            if check_choice(*list(pkgs_removed.values())) < 2:
+                for manager in pkgs_removed:
+                    cmd_rm = PACKAGE_MANAGERS[manager][1]
+                    pkgs = pkgs_removed[manager]
+                    # print(manager, cmd_rm, *pkgs)
+                    delete_packages(manager, cmd_rm, *pkgs)
                 break
     else:
         print("Oops, something went wrong)")
 
 
 if __name__ == "__main__":
-    # main()
-    pkg_managers = get_pkg_managers(PACKAGE_MANAGERS)
-    pkg_list = update_pkg_list((pkg_managers))
-    print(pkg_list)
+    main()
+    # pkg_managers = get_pkg_managers(PACKAGE_MANAGERS)
+    # pkg_list = update_pkg_list(pkg_managers)
+    # print(select_pkgs(pkg_list))
